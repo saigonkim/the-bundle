@@ -47,7 +47,7 @@ export async function POST(req: NextRequest) {
 
     // 3. Call Gemini
     const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
-    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-pro' });
+    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
 
     const prompt = `${BUNDLE_SYSTEM_PROMPT}\n\n${BUNDLE_USER_PROMPT(fullData)}`;
     const result = await model.generateContent(prompt);
