@@ -45,12 +45,42 @@ export async function POST(req: NextRequest) {
       price: prices?.find((p: any) => p.ticker === e.ticker)
     }));
 
-    // 3. Call Gemini
+    // 3. Call Gemini (with robust model selection)
     const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
-    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+    
+    // Priority list for model selection
+    const priorityModels = [
+      'gemini-1.5-flash',
+      'gemini-1.5-flash-latest',
+      'gemini-2.0-flash-exp',
+      'gemini-1.5-pro',
+      'gemini-1.5-pro-latest'
+    ];
 
-    const prompt = `${BUNDLE_SYSTEM_PROMPT}\n\n${BUNDLE_USER_PROMPT(fullData)}`;
-    const result = await model.generateContent(prompt);
+    let lastError = null;
+    let result = null;
+
+    for (const modelName of priorityModels) {
+      try {
+        console.log(`[Admin AI] Trying model: ${modelName}`);
+        const model = genAI.getGenerativeModel({ model: modelName });
+        const prompt = `${BUNDLE_SYSTEM_PROMPT}\n\n${BUNDLE_USER_PROMPT(fullData)}`;
+        result = await model.generateContent(prompt);
+        if (result) {
+          console.log(`[Admin AI] Successfully used model: ${modelName}`);
+          break;
+        }
+      } catch (err: any) {
+        console.warn(`[Admin AI] Model ${modelName} failed:`, err.message);
+        lastError = err;
+        continue;
+      }
+    }
+
+    if (!result) {
+      throw new Error(`All Gemini models failed. Last error: ${lastError?.message}`);
+    }
+
     const responseText = result.response.text();
 
     // Cleaning common Gemini markdown wrapping if present
