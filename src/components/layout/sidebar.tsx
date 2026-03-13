@@ -14,9 +14,18 @@ const sidebarItems = [
 ]
 
 import { logout } from '@/app/auth/actions'
+import { useTransition } from 'react'
 
 export function Sidebar({ className }: { className?: string }) {
   const pathname = usePathname()
+  const [isPending, startTransition] = useTransition()
+
+  const handleLogout = async (e: React.FormEvent) => {
+    e.preventDefault()
+    startTransition(async () => {
+      await logout()
+    })
+  }
 
   return (
     <aside className={cn(
@@ -52,13 +61,17 @@ export function Sidebar({ className }: { className?: string }) {
         })}
       </nav>
       <div className="p-4 mt-auto border-t border-zinc-100 dark:border-zinc-800">
-        <form action={logout}>
+        <form onSubmit={handleLogout}>
              <button
                type="submit"
-               className="flex w-full items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-destructive hover:bg-destructive/10 transition-all text-left"
+               disabled={isPending}
+               className={cn(
+                 "flex w-full items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-destructive hover:bg-destructive/10 transition-all text-left",
+                 isPending && "opacity-50 cursor-not-allowed"
+               )}
              >
                <LogOut className="w-5 h-5" />
-               로그아웃
+               {isPending ? '로그아웃 중...' : '로그아웃'}
              </button>
         </form>
       </div>
