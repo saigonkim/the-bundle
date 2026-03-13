@@ -12,7 +12,7 @@ export const BundleDraftSchema = z.object({
   theme: z.string().max(100),
   summary: z.string().max(300),
   monthly_comment: z.string().max(500),
-  etf_cards: z.array(EtfCardSchema),
+  etf_cards: z.array(EtfCardSchema).min(3), // Must have at least 3 cards
 });
 
 export type BundleDraft = z.infer<typeof BundleDraftSchema>;

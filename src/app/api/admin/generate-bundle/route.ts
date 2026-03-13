@@ -33,16 +33,26 @@ export async function POST(req: NextRequest) {
 
     if (etfError || !etfs) throw new Error('Failed to fetch ETFs');
 
-    // Fetch latest prices for these ETFs
+    // Fetch latest prices for these ETFs by ticker
     const { data: prices, error: priceError } = await supabase
       .from('etf_prices')
-      .select('ticker, close_price, nav, change_pct')
-      .order('price_date', { ascending: false })
-      .limit(etfs.length);
+      .select('ticker, close_price, nav, change_pct, price_date')
+      .in('ticker', etfs.map(e => e.ticker))
+      .order('price_date', { ascending: false });
+
+    // Helper to get latest price per ticker
+    const latestPricesMapped = new Map();
+    if (prices) {
+      for (const p of prices) {
+        if (!latestPricesMapped.has(p.ticker)) {
+          latestPricesMapped.set(p.ticker, p);
+        }
+      }
+    }
 
     const fullData = etfs.map((e: any) => ({
       ...e,
-      price: prices?.find((p: any) => p.ticker === e.ticker)
+      price: latestPricesMapped.get(e.ticker)
     }));
 
     // 3. Call Gemini (with robust model selection)
@@ -84,12 +94,17 @@ export async function POST(req: NextRequest) {
 
     const responseText = result.response.text();
 
-    // Cleaning common Gemini markdown wrapping if present
-    const cleanJson = responseText.replace(/```json/g, '').replace(/```/g, '').trim();
+    // Robust cleaning of markdown code blocks
+    const cleanJson = responseText
+      .replace(/^```+(json|JSON)?\s*/g, '')
+      .replace(/\s*```+$/g, '')
+      .trim();
+    
     const draft = JSON.parse(cleanJson);
 
     // 4. Validate with Zod
     const parsed = BundleDraftSchema.parse(draft);
+    console.log(`[Admin AI] Generated bundle items: ${parsed.etf_cards.length}`);
 
     // 5. Store as Draft in DB
     const { data: bundle, error: bundleError } = await supabase
