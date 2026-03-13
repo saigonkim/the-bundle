@@ -13,6 +13,8 @@ const sidebarItems = [
   { name: '설정', href: '/dashboard/settings', icon: Settings },
 ]
 
+import { logout } from '@/app/auth/actions'
+
 export function Sidebar({ className }: { className?: string }) {
   const pathname = usePathname()
 
@@ -50,7 +52,7 @@ export function Sidebar({ className }: { className?: string }) {
         })}
       </nav>
       <div className="p-4 mt-auto border-t border-zinc-100 dark:border-zinc-800">
-        <form action="/auth/logout" method="POST">
+        <form action={logout}>
              <button
                type="submit"
                className="flex w-full items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-destructive hover:bg-destructive/10 transition-all text-left"
