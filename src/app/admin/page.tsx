@@ -7,11 +7,20 @@ import { Badge } from '@/components/ui/badge'
 import { Loader2, Sparkles, CheckCircle2, AlertCircle, List, Send, Archive } from 'lucide-react'
 import { toast } from 'sonner'
 import { format } from 'date-fns'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
 
 export default function AdminPage() {
   const [loading, setLoading] = useState(false)
   const [bundles, setBundles] = useState<any[]>([])
   const [fetching, setFetching] = useState(false)
+  const [selectedBundle, setSelectedBundle] = useState<any>(null)
+  const [isDetailLoading, setIsDetailLoading] = useState(false)
 
   const fetchBundles = async () => {
     setFetching(true)
@@ -60,12 +69,36 @@ export default function AdminPage() {
       if (res.ok) {
         toast.success('번들이 발행되었습니다!')
         fetchBundles()
+        if (selectedBundle?.bundle?.id === id) {
+          setSelectedBundle((prev: any) => ({
+            ...prev,
+            bundle: { ...prev.bundle, status: 'published' }
+          }))
+        }
       } else {
         const data = await res.json()
         throw new Error(data.error || '발행 실패')
       }
     } catch (err: any) {
       toast.error(err.message)
+    }
+  }
+
+  const viewDetail = async (id: string) => {
+    setIsDetailLoading(true)
+    try {
+      const res = await fetch(`/api/admin/bundles/${id}`)
+      const data = await res.json()
+      if (res.ok) {
+        setSelectedBundle(data)
+      } else {
+        toast.error(data.error || '상세 조회 실패')
+      }
+    } catch (err) {
+      console.error(err)
+      toast.error('오류가 발생했습니다.')
+    } finally {
+      setIsDetailLoading(false)
     }
   }
 
@@ -169,6 +202,13 @@ export default function AdminPage() {
                     {bundle.published_at && ` | 발행: ${format(new Date(bundle.published_at), 'yyyy-MM-dd HH:mm')}`}
                   </div>
                   <div className="flex gap-2">
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => viewDetail(bundle.id)}
+                    >
+                      상세보기
+                    </Button>
                     {bundle.status === 'draft' && (
                       <Button 
                         size="sm" 
@@ -179,7 +219,7 @@ export default function AdminPage() {
                       </Button>
                     )}
                     {bundle.status === 'published' && (
-                      <div className="text-emerald-600 flex items-center gap-1 text-sm font-bold">
+                      <div className="text-emerald-600 flex items-center gap-1 text-sm font-bold px-2">
                         <CheckCircle2 className="w-4 h-4" /> 게시됨
                       </div>
                     )}
@@ -190,6 +230,83 @@ export default function AdminPage() {
           </div>
         </div>
       </div>
+
+      {/* Bundle Detail Dialog */}
+      <Dialog open={!!selectedBundle} onOpenChange={(open) => !open && setSelectedBundle(null)}>
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-hidden flex flex-col p-0">
+          <DialogHeader className="p-6 pb-2">
+            <div className="flex items-center justify-between">
+              <DialogTitle className="text-2xl font-bold">{selectedBundle?.bundle?.title}</DialogTitle>
+              <Badge variant={selectedBundle?.bundle?.status === 'published' ? 'default' : 'secondary'}>
+                {selectedBundle?.bundle?.status?.toUpperCase()}
+              </Badge>
+            </div>
+            <DialogDescription className="text-indigo-600 font-medium pt-1">
+              {selectedBundle?.bundle?.theme}
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="flex-1 p-6 pt-0 overflow-y-auto">
+            <div className="space-y-8 py-4">
+              {/* Summary Section */}
+              <section className="space-y-3">
+                <h3 className="text-sm font-bold text-zinc-400 uppercase tracking-wider">AI 생성 요약</h3>
+                <div className="p-4 bg-zinc-50 dark:bg-zinc-900 rounded-2xl border border-zinc-100 dark:border-zinc-800 italic leading-relaxed">
+                  "{selectedBundle?.bundle?.summary}"
+                </div>
+              </section>
+
+              {/* Commentary Section */}
+              <section className="space-y-3">
+                <h3 className="text-sm font-bold text-zinc-400 uppercase tracking-wider">사용자 응원 메시지</h3>
+                <p className="whitespace-pre-wrap leading-relaxed text-zinc-700 dark:text-zinc-300">
+                  {selectedBundle?.bundle?.ai_commentary}
+                </p>
+              </section>
+
+              {/* ETF Cards Section */}
+              <section className="space-y-4">
+                <h3 className="text-sm font-bold text-zinc-400 uppercase tracking-wider">구성 ETF 종목 ({selectedBundle?.items?.length}종)</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {selectedBundle?.items?.map((item: any) => (
+                    <Card key={item.id} className="border-zinc-100 dark:border-zinc-800 shadow-sm hover:shadow-md transition-shadow">
+                      <CardHeader className="p-4 pb-2">
+                        <div className="flex justify-between items-start">
+                          <div className="px-2 py-0.5 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 rounded text-[10px] font-bold">
+                            {item.etf_ticker}
+                          </div>
+                          <span className="text-xs font-bold text-zinc-400">{item.weight}%</span>
+                        </div>
+                        <CardTitle className="text-base font-bold pt-1">{item.etf_name}</CardTitle>
+                      </CardHeader>
+                      <CardContent className="p-4 pt-0 space-y-3">
+                        <p className="text-sm text-indigo-600 font-medium">"{item.metaphor}"</p>
+                        <p className="text-xs text-zinc-500 leading-relaxed bg-zinc-50 dark:bg-zinc-900 p-2 rounded-lg">
+                          {item.rationale}
+                        </p>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              </section>
+            </div>
+          </div>
+
+          <div className="p-6 border-t bg-zinc-50 dark:bg-zinc-900/50 flex justify-end gap-3">
+            <Button variant="outline" onClick={() => setSelectedBundle(null)}>
+              닫기
+            </Button>
+            {selectedBundle?.bundle?.status === 'draft' && (
+              <Button 
+                onClick={() => publishBundle(selectedBundle.bundle.id)}
+                className="bg-zinc-900 dark:bg-zinc-50 text-white dark:text-zinc-950 px-8"
+              >
+                <Send className="w-4 h-4 mr-2" /> 이대로 발행하기
+              </Button>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
