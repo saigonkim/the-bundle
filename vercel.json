@@ -1,0 +1,8 @@
+{
+  "crons": [
+    {
+      "path": "/api/cron/fetch-etf",
+      "schedule": "30 15 * * 1-5"
+    }
+  ]
+}
