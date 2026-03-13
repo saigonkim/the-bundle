@@ -5,7 +5,9 @@ import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import Link from 'next/link'
 
-export default function LoginPage({ searchParams }: { searchParams: { error?: string } }) {
+export default async function LoginPage({ searchParams }: { searchParams: Promise<{ error?: string }> }) {
+  const { error } = await searchParams
+
   return (
     <div className="flex min-h-screen items-center justify-center bg-zinc-50 px-4 py-12 dark:bg-zinc-950">
       <Card className="w-full max-w-md border-zinc-200 shadow-xl dark:border-zinc-800">
@@ -17,9 +19,9 @@ export default function LoginPage({ searchParams }: { searchParams: { error?: st
         </CardHeader>
         <form action={login}>
           <CardContent className="space-y-4">
-            {searchParams.error && (
+            {error && (
               <div className="rounded-md bg-destructive/15 p-3 text-sm text-destructive">
-                {searchParams.error}
+                {error}
               </div>
             )}
             <div className="space-y-2">

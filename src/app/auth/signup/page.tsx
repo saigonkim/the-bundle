@@ -5,7 +5,9 @@ import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import Link from 'next/link'
 
-export default function SignupPage({ searchParams }: { searchParams: { error?: string, success?: string } }) {
+export default async function SignupPage({ searchParams }: { searchParams: Promise<{ error?: string, success?: string }> }) {
+  const { error, success } = await searchParams
+
   return (
     <div className="flex min-h-screen items-center justify-center bg-zinc-50 px-4 py-12 dark:bg-zinc-950">
       <Card className="w-full max-w-md border-zinc-200 shadow-xl dark:border-zinc-800">
@@ -17,12 +19,12 @@ export default function SignupPage({ searchParams }: { searchParams: { error?: s
         </CardHeader>
         <form action={signup}>
           <CardContent className="space-y-4">
-            {searchParams.error && (
+            {error && (
               <div className="rounded-md bg-destructive/15 p-3 text-sm text-destructive">
-                {searchParams.error}
+                {error}
               </div>
             )}
-            {searchParams.success && (
+            {success && (
               <div className="rounded-md bg-green-500/15 p-3 text-sm text-green-600 dark:text-green-400 border border-green-500/20">
                 인증 메일이 발송되었습니다. 이메일을 확인해주세요!
               </div>
