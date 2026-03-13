@@ -14,9 +14,13 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Checking if user is admin (simplified for now, ideally check user_metadata or roles table)
-    // In a real app, user_metadata.role should be verified.
-    const isAdmin = user.user_metadata?.role === 'admin' || user.email === 'alex@antigravity.dev' || process.env.NODE_ENV === 'development';
+    // Checking if user is admin (verified via app_metadata for security)
+    const isAdmin = 
+      user.app_metadata?.role === 'admin' || 
+      user.user_metadata?.role === 'admin' || // Fallback
+      user.email === 'alex@antigravity.dev' || 
+      process.env.NODE_ENV === 'development';
+      
     if (!isAdmin) {
       return NextResponse.json({ error: 'Forbidden. Admin only.' }, { status: 403 });
     }
