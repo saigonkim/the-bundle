@@ -5,7 +5,6 @@ export const EtfCardSchema = z.object({
   name: z.string(),
   metaphor: z.string().max(100),        
   rationale: z.string().max(300),      // Increased from 100
-  one_liner: z.string().max(100),       
 });
 
 export const BundleDraftSchema = z.object({

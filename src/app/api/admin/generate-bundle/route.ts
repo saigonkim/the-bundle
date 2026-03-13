@@ -117,7 +117,6 @@ export async function POST(req: NextRequest) {
             weight: Math.floor(100 / parsed.etf_cards.length), // Example: 10% each if 10 cards
             metaphor: card.metaphor,
             rationale: card.rationale,
-            one_liner: card.one_liner,
             order_index: index + 1
         };
     });
