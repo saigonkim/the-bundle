@@ -16,18 +16,36 @@ export async function PUT(
   const { id } = await params
 
   try {
-    // 2. Transaction-like: Unpublish previous bundles and publish the new one
-    // In Supabase, we can just update all published to archived, then this one to published
-    
-    // First, unpublish all
-    const { error: unpublishError } = await supabase
+    // 2. Fetch the bundle to get its series_id
+    const { data: targetBundle, error: fetchError } = await supabase
       .from('bundles')
-      .update({ status: 'archived' })
-      .eq('status', 'published')
+      .select('series_id')
+      .eq('id', id)
+      .single()
 
-    if (unpublishError) throw unpublishError
+    if (fetchError || !targetBundle) throw new Error('Bundle not found')
 
-    // Second, publish target
+    // 3. Archive previous bundles of the SAME series
+    if (targetBundle.series_id) {
+        const { error: unpublishError } = await supabase
+          .from('bundles')
+          .update({ status: 'archived' })
+          .eq('status', 'published')
+          .eq('series_id', targetBundle.series_id)
+
+        if (unpublishError) throw unpublishError
+    } else {
+        // Fallback for bundles without series (archive all existing published - old behavior)
+        const { error: unpublishError } = await supabase
+          .from('bundles')
+          .update({ status: 'archived' })
+          .eq('status', 'published')
+          .is('series_id', null)
+
+        if (unpublishError) throw unpublishError
+    }
+
+    // 4. Publish target
     const { error: publishError } = await supabase
       .from('bundles')
       .update({ 

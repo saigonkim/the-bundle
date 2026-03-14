@@ -21,6 +21,8 @@ export default function AdminPage() {
   const [fetching, setFetching] = useState(false)
   const [selectedBundle, setSelectedBundle] = useState<any>(null)
   const [isDetailLoading, setIsDetailLoading] = useState(false)
+  const [series, setSeries] = useState<any[]>([])
+  const [selectedSeriesId, setSelectedSeriesId] = useState<string>('')
 
   const fetchBundles = async () => {
     setFetching(true)
@@ -37,8 +39,22 @@ export default function AdminPage() {
     }
   }
 
+  const fetchSeries = async () => {
+    try {
+      const res = await fetch('/api/admin/series')
+      const data = await res.json()
+      if (res.ok) {
+        setSeries(data.series)
+        if (data.series.length > 0) setSelectedSeriesId(data.series[0].id)
+      }
+    } catch (err) {
+      console.error(err)
+    }
+  }
+
   useEffect(() => {
     fetchBundles()
+    fetchSeries()
   }, [])
 
   const generateBundle = async () => {
@@ -46,6 +62,8 @@ export default function AdminPage() {
     try {
       const res = await fetch('/api/admin/generate-bundle', {
         method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ series_id: selectedSeriesId })
       });
       const data = await res.json();
       if (res.ok) {
@@ -119,10 +137,30 @@ export default function AdminPage() {
                 AI 번들 큐레이션
               </CardTitle>
               <CardDescription>
-                Gemini AI를 사용하여 이번 달 테마에 맞는 ETF를 자동으로 페어링합니다.
+                고정된 10가지 테마 중 하나를 선택하여 이번 달 구성을 업데이트합니다.
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6 relative z-10">
+              <div className="space-y-2">
+                <label className="text-sm font-bold text-zinc-500 uppercase tracking-tight">테마 선택</label>
+                <div className="grid grid-cols-2 gap-2">
+                  {series.map((s) => (
+                    <button
+                      key={s.id}
+                      onClick={() => setSelectedSeriesId(s.id)}
+                      className={`p-3 text-left text-xs rounded-xl border-2 transition-all ${
+                        selectedSeriesId === s.id 
+                          ? 'border-indigo-500 bg-indigo-50/50 dark:bg-indigo-500/10 text-indigo-600 font-bold' 
+                          : 'border-zinc-100 dark:border-zinc-800 hover:border-zinc-200 text-zinc-500'
+                      }`}
+                    >
+                      <div className="opacity-60 mb-0.5">{s.category}</div>
+                      <div className="truncate">{s.name}</div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
               <Button 
                 size="lg" 
                 onClick={generateBundle} 
@@ -180,8 +218,8 @@ export default function AdminPage() {
               <Card key={bundle.id} className="border-zinc-200 dark:border-zinc-800 hover:border-indigo-500/30 transition-colors">
                 <CardHeader className="flex flex-row items-start justify-between pb-2">
                   <div className="space-y-1">
-                    <CardTitle className="text-xl font-bold">{bundle.title}</CardTitle>
-                    <CardDescription>{bundle.theme}</CardDescription>
+                    <CardTitle className="text-xl font-bold italic text-indigo-600">{bundle.bundle_series?.name || bundle.theme}</CardTitle>
+                    <CardDescription>{bundle.title}</CardDescription>
                   </div>
                   <Badge 
                     variant={bundle.status === 'published' ? 'default' : 'secondary'}

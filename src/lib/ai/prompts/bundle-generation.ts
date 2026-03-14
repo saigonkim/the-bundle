@@ -30,10 +30,14 @@ JSON 구조는 다음과 같다:
 }
 `;
 
-export const BUNDLE_USER_PROMPT = (data: any) => `
-이번 달 번들 후보 ETF 목록과 시장 상황입니다:
+export const BUNDLE_USER_PROMPT = (data: any, series?: any) => `
+이번 달 번들 ${series ? `'${series.name}' 테마` : ''} 후보 ETF 목록과 시장 상황입니다:
 
 ${JSON.stringify(data, null, 2)}
+
+${series ? `[특별 지시] 이 번들은 '${series.name}' 테마에 특화되어 있습니다.
+테마 설명: ${series.description}
+위 테마의 정체성을 잘 살려서 종목을 선정하고 코멘트를 작성해주세요.` : ''}
 
 위 데이터를 바탕으로 이번 달 'The Bundle'을 위한 큐레이션 콘텐츠를 생성해주세요.
 시장 상황이 좋든 나쁘든, 20대들이 희망을 잃지 않고 소액으로나마 시작할 수 있도록 격려해주세요.

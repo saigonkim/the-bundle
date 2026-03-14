@@ -25,6 +25,18 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Forbidden. Admin only.' }, { status: 403 });
     }
 
+    const { series_id } = await req.json().catch(() => ({}));
+    
+    let seriesInfo = null;
+    if (series_id) {
+      const { data: series } = await supabase
+        .from('bundle_series')
+        .select('*')
+        .eq('id', series_id)
+        .single();
+      seriesInfo = series;
+    }
+
     // 2. Fetch recent ETF candidates (prices and info)
     const { data: etfs, error: etfError } = await supabase
       .from('etf_master')
@@ -75,7 +87,7 @@ export async function POST(req: NextRequest) {
       try {
         console.log(`[Admin AI] Trying model: ${modelName}`);
         const model = genAI.getGenerativeModel({ model: modelName });
-        const prompt = `${BUNDLE_SYSTEM_PROMPT}\n\n${BUNDLE_USER_PROMPT(fullData)}`;
+        const prompt = `${BUNDLE_SYSTEM_PROMPT}\n\n${BUNDLE_USER_PROMPT(fullData, seriesInfo)}`;
         result = await model.generateContent(prompt);
         if (result) {
           console.log(`[Admin AI] Successfully used model: ${modelName}`);
@@ -111,7 +123,8 @@ export async function POST(req: NextRequest) {
       .from('bundles')
       .insert({
         title: parsed.title,
-        theme: parsed.theme,
+        theme: seriesInfo ? seriesInfo.name : parsed.theme,
+        series_id: series_id || null,
         summary: parsed.summary,
         ai_commentary: parsed.monthly_comment,
         status: 'draft',

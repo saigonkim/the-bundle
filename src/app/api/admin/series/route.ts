@@ -11,14 +11,15 @@ export async function GET() {
   }
 
   try {
-    const { data: bundles, error } = await supabase
-      .from('bundles')
-      .select('*, bundle_series(*)')
-      .order('created_at', { ascending: false })
+    const { data: series, error } = await supabase
+      .from('bundle_series')
+      .select('*')
+      .eq('is_active', true)
+      .order('category', { ascending: true })
 
     if (error) throw error
 
-    return NextResponse.json({ bundles })
+    return NextResponse.json({ series })
   } catch (err: any) {
     return NextResponse.json({ error: err.message }, { status: 500 })
   }

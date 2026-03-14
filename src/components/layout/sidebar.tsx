@@ -13,29 +13,21 @@ const sidebarItems = [
   { name: '설정', href: '/dashboard/settings', icon: Settings },
 ]
 
-import { logout } from '@/app/auth/actions'
-import { useTransition } from 'react'
+import { UserProfileDropdown } from './user-profile-dropdown'
 
-export function Sidebar({ className }: { className?: string }) {
+export function Sidebar({ className, user }: { className?: string, user?: any }) {
   const pathname = usePathname()
-  const [isPending, startTransition] = useTransition()
-
-  const handleLogout = async (e: React.FormEvent) => {
-    e.preventDefault()
-    startTransition(async () => {
-      await logout()
-    })
-  }
 
   return (
     <aside className={cn(
       "border-r border-zinc-200 dark:border-zinc-800 flex flex-col h-screen sticky top-0 bg-white dark:bg-zinc-950 overflow-hidden",
       className
     )}>
-      <div className="h-16 flex items-center px-6 border-b border-zinc-200 dark:border-zinc-800">
-        <Link href="/dashboard" className="text-xl font-bold tracking-tight">
+      <div className="h-16 flex items-center justify-between px-6 border-b border-zinc-200 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-900/50">
+        <Link href="/dashboard" className="text-lg font-bold tracking-tight text-zinc-900 dark:text-zinc-50">
           The Bundle
         </Link>
+        {user && <UserProfileDropdown user={user} />}
       </div>
       <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
         {sidebarItems.map((item) => {
@@ -61,19 +53,13 @@ export function Sidebar({ className }: { className?: string }) {
         })}
       </nav>
       <div className="p-4 mt-auto border-t border-zinc-100 dark:border-zinc-800">
-        <form onSubmit={handleLogout}>
-             <button
-               type="submit"
-               disabled={isPending}
-               className={cn(
-                 "flex w-full items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-destructive hover:bg-destructive/10 transition-all text-left",
-                 isPending && "opacity-50 cursor-not-allowed"
-               )}
-             >
-               <LogOut className="w-5 h-5" />
-               {isPending ? '로그아웃 중...' : '로그아웃'}
-             </button>
-        </form>
+        <Link
+           href="/dashboard/settings"
+           className="flex items-center gap-3 px-3 py-2 text-sm font-medium text-zinc-500 hover:text-zinc-900 transition-colors"
+        >
+          <Settings className="w-4 h-4" />
+          시스템 설정
+        </Link>
       </div>
     </aside>
   )
