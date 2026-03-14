@@ -59,17 +59,22 @@ async function run() {
     if (userId) {
       // Seed Subscription
       console.log(`  Seeding subscription for ${userSpec.email}...`)
-      await supabase.from('user_subscriptions').upsert({
+      const { data: subData, error: subError } = await supabase.from('user_subscriptions').upsert({
         user_id: userId,
         status: 'active',
         plan_type: 'monthly',
         start_nav: 1000,
         current_nav: 1000,
-      }, { onConflict: 'user_id' })
+      }, { onConflict: 'user_id' }).select().single()
 
-      // Seed Patience Logs (Clear and re-insert for freshness)
+      if (subError) {
+        console.error(`❌ Error seeding subscription for ${userSpec.email}:`, subError.message)
+        continue
+      }
+      const subscriptionId = subData.id
+
+      // Seed Patience Logs
       console.log(`  Seeding patience logs for ${userSpec.email}...`)
-      await supabase.from('patience_logs').delete().eq('user_id', userId)
       
       const logs = []
       let currentRoi = 0
@@ -79,18 +84,29 @@ async function run() {
       for (let i = 14; i >= 0; i--) {
         const date = new Date(now)
         date.setDate(date.getDate() - i)
+        
+        // Use stable date format YYYY-MM-DD
+        const dateStr = date.toISOString().split('T')[0]
+        
         currentRoi += (Math.random() * 2) - 0.5
         currentScore += (Math.random() * 1) + 0.5
 
         logs.push({
           user_id: userId,
-          recorded_date: date.toISOString(),
+          subscription_id: subscriptionId,
+          recorded_date: dateStr,
           virtual_return_pct: parseFloat(currentRoi.toFixed(2)),
           patience_score: parseFloat(currentScore.toFixed(1)),
           reason: i === 14 ? '투여의 시작' : '일간 자본 성장 기록'
         })
       }
-      await supabase.from('patience_logs').insert(logs)
+      const { error: logError } = await supabase
+        .from('patience_logs')
+        .upsert(logs, { onConflict: 'user_id,recorded_date' })
+      
+      if (logError) {
+        console.error(`❌ Error seeding logs for ${userSpec.email}:`, logError.message)
+      }
     }
   }
   

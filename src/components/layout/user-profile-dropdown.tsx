@@ -1,7 +1,7 @@
 'use client'
 
 import { logout } from '@/app/auth/actions'
-import { useTransition } from 'react'
+import { useTransition, useState, useEffect } from 'react'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -28,6 +28,11 @@ interface UserProfileDropdownProps {
 
 export function UserProfileDropdown({ user }: UserProfileDropdownProps) {
   const [isPending, startTransition] = useTransition()
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   const handleLogout = (e: React.MouseEvent) => {
     e.preventDefault()
@@ -38,6 +43,12 @@ export function UserProfileDropdown({ user }: UserProfileDropdownProps) {
 
   const displayName = user.user_metadata?.full_name || user.email?.split('@')[0] || '사용자'
   const initials = displayName.substring(0, 2).toUpperCase()
+
+  if (!mounted) {
+    return (
+      <div className="flex items-center justify-center p-1 rounded-full w-10 h-10 border border-zinc-100 dark:border-zinc-800 animate-pulse bg-zinc-50 dark:bg-zinc-900/50" />
+    )
+  }
 
   return (
     <DropdownMenu>
