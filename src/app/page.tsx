@@ -1,4 +1,5 @@
 import { Header } from '@/components/layout/header'
+import { Footer } from '@/components/layout/footer'
 import { Button } from '@/components/ui/button'
 import Link from 'next/link'
 import { ArrowRight, Coffee, ShieldCheck, Sparkles } from 'lucide-react'
@@ -71,6 +72,7 @@ export default async function LandingPage() {
           </div>
         </section>
       </main>
+      <Footer />
     </div>
   )
 }
