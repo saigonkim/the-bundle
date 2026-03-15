@@ -8,11 +8,26 @@ import { cn, formatDate } from '@/lib/utils'
 import { getPatienceInfo } from '@/lib/patience/calculator'
 import { DownloadReportButton } from '@/components/dashboard/download-report-button'
 
-export default async function PerformancePage() {
+import { SeriesFilter } from '@/components/dashboard/series-filter'
+
+export default async function PerformancePage({
+  searchParams,
+}: {
+  searchParams: Promise<{ series?: string }>
+}) {
+  const { series: selectedSeriesId } = await searchParams
+  const seriesId = selectedSeriesId || 'aabe7761-e6e2-45d0-aee9-29c727644c3f'
+
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
 
   if (!user) return null
+
+  // Fetch all active series for the filter
+  const { data: allSeries } = await supabase
+    .from('bundle_series')
+    .select('id, name')
+    .eq('is_active', true)
 
   // Current subscription to get start_nav
   const { data: subscription } = await supabase
@@ -26,9 +41,11 @@ export default async function PerformancePage() {
   if (!isActive) {
     return (
       <div className="p-6 md:p-10 space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
-        <header>
-          <h1 className="text-4xl font-black tracking-tight">수익률 트래킹</h1>
-          <p className="text-zinc-500 border-l-2 border-indigo-500 pl-3 mt-2">시간이 지날수록 단단해지는 나의 자산 성적표입니다.</p>
+        <header className="flex flex-col md:flex-row md:items-end justify-between gap-4">
+          <div>
+            <h1 className="text-4xl font-black tracking-tight">수익률 트래킹</h1>
+            <p className="text-zinc-500 border-l-2 border-indigo-500 pl-3 mt-2">시간이 지날수록 단단해지는 나의 자산 성적표입니다.</p>
+          </div>
         </header>
 
         <div className="flex flex-col items-center justify-center py-32 rounded-[3rem] border-2 border-dashed border-zinc-200 dark:border-zinc-800 text-center space-y-8 bg-zinc-50/50 dark:bg-zinc-900/20 relative overflow-hidden">
@@ -57,6 +74,7 @@ export default async function PerformancePage() {
     .from('patience_logs')
     .select('*')
     .eq('user_id', user.id)
+    .eq('series_id', seriesId)
     .order('recorded_date', { ascending: true })
 
   const latestLog = logs && logs.length > 0 ? logs[logs.length - 1] : null
@@ -73,11 +91,19 @@ export default async function PerformancePage() {
     roi: Number(log.virtual_return_pct)
   })) || []
 
+  // Determine the current series name for display
+  const currentSeries = allSeries?.find(s => s.id === seriesId)
+
   return (
     <div className="p-6 md:p-10 space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
-      <header>
-        <h1 className="text-4xl font-black tracking-tight">수익률 트래킹</h1>
-        <p className="text-zinc-500 border-l-2 border-indigo-500 pl-3 mt-2">시간이 지날수록 단단해지는 나의 자산 성적표입니다.</p>
+      <header className="flex flex-col md:flex-row md:items-end justify-between gap-4">
+        <div>
+          <h1 className="text-4xl font-black tracking-tight">수익률 트래킹</h1>
+          <p className="text-zinc-500 border-l-2 border-indigo-500 pl-3 mt-2">
+            {currentSeries ? `${currentSeries.name}의 기록입니다.` : '시간이 지날수록 단단해지는 나의 자산 성적표입니다.'}
+          </p>
+        </div>
+        <SeriesFilter seriesList={allSeries || []} />
       </header>
 
       <div className="grid gap-6 md:grid-cols-3">
@@ -121,6 +147,7 @@ export default async function PerformancePage() {
       <div className="space-y-6">
         <div className="flex items-center justify-between px-2">
           <h3 className="text-xl font-bold">누적 수익률 추이</h3>
+          <Badge variant="outline" className="text-zinc-500 border-zinc-200">{currentSeries?.name}</Badge>
         </div>
         <RoiChart data={chartData} />
       </div>
@@ -141,7 +168,7 @@ export default async function PerformancePage() {
           <div className="space-y-2">
             <h4 className="font-bold text-zinc-900 dark:text-zinc-100">💎 기다림 지수 (Patience Score)</h4>
             <p className="text-sm text-zinc-600 dark:text-zinc-400 leading-relaxed">
-              수익률과 별개로, 시장의 흔들림에도 번들을 유지하며 길게 투자한 시간을 점수화한 당신의 투자 근력입니다.
+              수익률과 별개로, 시장의 흔들림에도 번들을 유지하며 길게 투자한 시간을 점수화한 당신의 투자 근격입니다. (대표 번들 기준)
             </p>
           </div>
         </div>
@@ -163,13 +190,15 @@ export default async function PerformancePage() {
             <div className="space-y-2">
               <div className="flex justify-between text-sm">
                 <span className="text-zinc-500">Benchmark (S&P 500)</span>
-                <span className="font-bold">+1.2%</span>
+                <span className="font-bold">+{logs?.length ? '1.2%' : '0.0%'}</span>
               </div>
               <div className="flex justify-between text-sm">
                 <span className="text-zinc-500">My Bundle</span>
-                <span className="font-bold text-emerald-500">+2.4%</span>
+                <span className={cn("font-bold", currentRoi >= 0 ? "text-emerald-500" : "text-rose-500")}>
+                  {currentRoi >= 0 ? '+' : ''}{currentRoi.toFixed(1)}%
+                </span>
               </div>
-              <Progress value={75} className="h-1.5 mt-2" />
+              <Progress value={logs?.length ? 75 : 0} className="h-1.5 mt-2" />
             </div>
           </div>
 
@@ -180,11 +209,11 @@ export default async function PerformancePage() {
             </div>
             <div className="flex items-center gap-4">
               <div className="h-12 w-12 rounded-full border-4 border-emerald-500/20 border-t-emerald-500 flex items-center justify-center text-xs font-black">
-                92%
+                {logs?.length ? '92%' : '-%'}
               </div>
               <div>
-                <p className="text-sm font-bold">안정적인 분산</p>
-                <p className="text-[10px] text-zinc-500">기술주 비중 65% 유지중</p>
+                <p className="text-sm font-bold">{logs?.length ? '안정적인 분산' : '데이터 수집중'}</p>
+                <p className="text-[10px] text-zinc-500">{logs?.length ? '포트폴리오 비중 유지중' : '기록이 생성되면 분석됩니다'}</p>
               </div>
             </div>
           </div>
@@ -195,8 +224,10 @@ export default async function PerformancePage() {
               Weekly Action
             </div>
             <div className="p-3 bg-indigo-50 dark:bg-indigo-900/20 rounded-2xl">
-              <p className="text-xs font-bold text-indigo-700 dark:text-indigo-400">"현 상태 유지 (HODL)"</p>
-              <p className="text-[10px] text-indigo-600/70 dark:text-indigo-400/70 mt-1">4월 리밸런싱까지 추가 대응이 필요 없습니다.</p>
+              <p className="text-xs font-bold text-indigo-700 dark:text-indigo-400">"{logs?.length ? '현 상태 유지 (HODL)' : '대기 중'}"</p>
+              <p className="text-[10px] text-indigo-600/70 dark:text-indigo-400/70 mt-1">
+                {logs?.length ? '월초 리밸런싱까지 추가 대응이 필요 없습니다.' : '첫 데이터가 쌓일 때까지 기다려주세요.'}
+              </p>
             </div>
           </div>
         </div>
@@ -206,11 +237,13 @@ export default async function PerformancePage() {
             <div>
               <h4 className="font-bold text-lg mb-1">AI 요약 인사이트 🤖</h4>
               <p className="text-sm opacity-90 leading-relaxed max-w-2xl">
-                금리 인하 동결에 따라 나스닥의 변동성이 컸지만, 반도체 올인 번들이 보유한 제조 ETF들이 방어력을 보여주었습니다. 
-                현재 지수는 가입 시점 대비 순항 중이며 리밸런싱 주기인 월초까지 보유를 권장합니다.
+                {logs && logs.length > 0 
+                  ? `나의 ${currentSeries?.name || '번들'} 지수는 가입 시점 대비 순항 중이며 리밸런싱 주기인 월초까지 보유를 권장합니다. 시장의 변동성에도 불구하고 안정적인 방어력을 보여주고 있습니다.`
+                  : "데이터가 수집되면 AI가 당신의 번들 성과를 분석해 드립니다. 첫 기록이 생성될 때까지 조금만 기다려주세요!"
+                }
               </p>
             </div>
-            <DownloadReportButton />
+            {logs && logs.length > 0 && <DownloadReportButton />}
           </div>
           <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -translate-y-32 translate-x-32 blur-3xl" />
         </div>
