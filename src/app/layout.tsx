@@ -18,16 +18,25 @@ export const metadata: Metadata = {
   description: "커피 한 잔의 가치로 시작하는 나만의 ETF 번들 구독 서비스. AI가 들려주는 쉬운 경제 이야기와 함께 건강한 투자 습관을 만드세요.",
   openGraph: {
     title: "The Bundle | 20대를 위한 스마트 ETF 큐레이션",
-    description: "커피 한 잔의 가치로 시작하는 나만의 ETF 번들 구독 서비스.",
+    description: "커피 한 잔의 가치로 시작하는 나만의 ETF 번들 구독 서비스. AI가 들려주는 쉬운 경제 이야기와 함께 건강한 투자 습관을 만드세요.",
     type: "website",
     locale: "ko_KR",
-    url: "https://thebundle.io",
+    url: "https://the-bundle-jade.vercel.app",
     siteName: "The Bundle",
+    images: [
+      {
+        url: "/og-image.png",
+        width: 1200,
+        height: 630,
+        alt: "The Bundle - ETF Curation Service for 20s",
+      },
+    ],
   },
   twitter: {
     card: "summary_large_image",
     title: "The Bundle | 20대를 위한 스마트 ETF 큐레이션",
     description: "커피 한 잔의 가치로 시작하는 나만의 ETF 번들 구독 서비스.",
+    images: ["/og-image.png"],
   },
 };
 

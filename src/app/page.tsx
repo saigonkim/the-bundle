@@ -2,6 +2,7 @@ import { Header } from '@/components/layout/header'
 import { Button } from '@/components/ui/button'
 import Link from 'next/link'
 import { ArrowRight, Coffee, ShieldCheck, Sparkles } from 'lucide-react'
+import { LandingActionButton } from '@/components/landing/landing-action-button'
 import { createClient } from '@/lib/supabase/server'
 
 export default async function LandingPage() {
@@ -32,11 +33,10 @@ export default async function LandingPage() {
               20대 사회초년생을 위해 친숙한 비유로 큐레이션된 10종의 ETF를 경험하세요.
             </p>
             <div className="flex items-center justify-center gap-6">
-              <Link href={href}>
-                <Button size="lg" className="h-14 px-8 text-lg font-semibold rounded-full bg-zinc-900 text-white hover:scale-105 transition-transform dark:bg-zinc-50 dark:text-zinc-950">
-                  {user ? '내 대시보드 바로가기' : '구독 시작하기'} <ArrowRight className="ml-2 w-5 h-5" />
-                </Button>
-              </Link>
+              <LandingActionButton 
+                href={href} 
+                label={user ? '내 대시보드 바로가기' : '구독 시작하기'} 
+              />
               <Link href="/about">
                 <Button variant="ghost" size="lg" className="h-14 px-8 text-lg font-medium rounded-full">
                   더 알아보기

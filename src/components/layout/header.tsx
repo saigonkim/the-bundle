@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
+import { LandingActionButton } from '@/components/landing/landing-action-button'
 import { createClient } from '@/lib/supabase/server'
 
 export async function Header() {
@@ -20,21 +21,21 @@ export async function Header() {
         </div>
         <div className="flex items-center gap-3">
           {user ? (
-            <Link href="/dashboard">
-              <Button size="sm" className="font-medium bg-zinc-900 text-white dark:bg-zinc-50 dark:text-zinc-950 hover:opacity-90 rounded-full px-5">
-                내 대시보드
-              </Button>
-            </Link>
+            <LandingActionButton 
+              href="/dashboard" 
+              label="내 대시보드" 
+              size="sm"
+            />
           ) : (
             <>
               <Link href="/auth/login">
                 <Button variant="ghost" size="sm" className="font-medium">로그인</Button>
               </Link>
-              <Link href="/auth/signup">
-                <Button size="sm" className="font-medium bg-zinc-900 text-white dark:bg-zinc-50 dark:text-zinc-950 hover:opacity-90 rounded-full px-5">
-                  시작하기
-                </Button>
-              </Link>
+              <LandingActionButton 
+                href="/auth/signup" 
+                label="시작하기" 
+                size="sm"
+              />
             </>
           )}
         </div>
