@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge'
 import { TrendingUp, Clock, Package, ArrowUpRight, Zap, Target } from 'lucide-react'
 import { SubscriptionSubmitButton } from '@/components/dashboard/subscription-button'
 import { createMockSubscription } from './subscription-action'
-import { cn } from '@/lib/utils'
+import { cn, formatDate } from '@/lib/utils'
 import { getPatienceInfo } from '@/lib/patience/calculator'
 
 export default async function DashboardPage() {
@@ -72,7 +72,20 @@ export default async function DashboardPage() {
       return acc + (price * item.weight / 100)
     }, 0)
 
-    if (subscription.start_nav > 0) {
+    // Option B: Cumulative ROI using Bundle Index
+    const { data: latestIndex } = await supabase
+      .from('bundle_index_history')
+      .select('index_value')
+      .order('recorded_date', { ascending: false })
+      .limit(1)
+      .single()
+
+    if (latestIndex && subscription.start_index_value) {
+      const currentIndex = Number(latestIndex.index_value)
+      const startIndex = Number(subscription.start_index_value)
+      roi = ((currentIndex - startIndex) / startIndex) * 100
+    } else if (subscription.start_nav > 0) {
+      // Fallback to simple ROI if index not found
       roi = ((currentBundleNav - subscription.start_nav) / subscription.start_nav) * 100
     }
   }
@@ -132,17 +145,25 @@ export default async function DashboardPage() {
                   <Package className="w-40 h-40 text-indigo-600" />
                 </div>
                 <div className="flex items-center justify-between mb-8 relative z-10">
-                  <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 rounded-2xl bg-indigo-50 dark:bg-indigo-900/30 flex items-center justify-center">
+                  <Link 
+                    href={`/dashboard/bundle/${bundleData.id}`}
+                    className="flex items-center gap-4 group/title hover:opacity-90 transition-all"
+                  >
+                    <div className="w-12 h-12 rounded-2xl bg-indigo-50 dark:bg-indigo-900/30 flex items-center justify-center group-hover/title:scale-110 transition-transform duration-300">
                       <Package className="w-6 h-6 text-indigo-600 dark:text-indigo-400" />
                     </div>
                     <div>
-                      <h3 className="font-black text-xl tracking-tight">{bundleData.bundle_series?.name || bundleData.theme}</h3>
-                      <p className="text-sm font-medium text-zinc-500">{bundleData.title}</p>
+                      <div className="flex items-center gap-2">
+                        <h3 className="font-black text-2xl tracking-tight group-hover/title:text-indigo-600 dark:group-hover/title:text-indigo-400 transition-colors">
+                          {bundleData.bundle_series?.name || bundleData.theme}
+                        </h3>
+                        <ArrowUpRight className="w-5 h-5 text-zinc-300 group-hover/title:text-indigo-500 group-hover/title:translate-x-0.5 group-hover/title:-translate-y-0.5 transition-all" />
+                      </div>
+                      <p className="text-xs text-zinc-400 font-bold uppercase tracking-widest">{bundleData.title}</p>
                     </div>
-                  </div>
+                  </Link>
                   <Badge variant="outline" className="rounded-full px-4 h-8 border-zinc-200 dark:border-zinc-800 font-bold text-[10px] tracking-widest text-zinc-400">
-                    UPDATED: {new Date(bundleData.valid_from).toLocaleDateString()}
+                    UPDATED: {formatDate(bundleData.valid_from)}
                   </Badge>
                 </div>
                 
@@ -191,8 +212,8 @@ export default async function DashboardPage() {
                       </Badge>
                       <ArrowUpRight className="w-5 h-5 text-zinc-300 group-hover:text-indigo-500 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all" />
                     </div>
-                    <h4 className="font-black text-xl mb-1 tracking-tight relative z-10 group-hover:text-indigo-600 transition-colors">{b.bundle_series?.name || b.theme}</h4>
-                    <p className="text-xs font-medium text-zinc-500 truncate relative z-10">{b.title}</p>
+                    <h4 className="font-black text-xl mb-1 tracking-tight relative z-10 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">{b.bundle_series?.name || b.theme}</h4>
+                    <p className="text-sm font-medium text-zinc-600 dark:text-zinc-400 truncate relative z-10">{b.title}</p>
                   </Link>
                 ))}
               </div>
@@ -213,9 +234,9 @@ export default async function DashboardPage() {
                    {roi >= 0 ? '+' : ''}{roi.toFixed(2)}%
                  </span>
                </div>
-               <p className="text-[11px] mt-6 font-medium opacity-40 leading-relaxed uppercase tracking-widest relative z-10">
-                 Cumulative growth since<br />subscription start
-               </p>
+                <p className="text-[11px] mt-6 font-semibold text-zinc-400 leading-relaxed uppercase tracking-widest relative z-10 group-hover:text-zinc-300 transition-colors">
+                  Cumulative growth since<br />subscription start
+                </p>
             </div>
 
             <div className="rounded-[2.5rem] bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 p-10 flex flex-col items-center text-center shadow-sm relative overflow-hidden group">

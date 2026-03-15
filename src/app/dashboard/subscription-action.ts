@@ -40,6 +40,16 @@ export async function createMockSubscription() {
       startNav = (latestBundle.bundle_items as any[]).reduce((acc: number, item: any) => acc + (Number(item.base_nav) * Number(item.weight) / 100), 0)
     }
 
+    // Get current index value
+    const { data: latestIndex } = await supabase
+      .from('bundle_index_history')
+      .select('index_value')
+      .order('recorded_date', { ascending: false })
+      .limit(1)
+      .maybeSingle()
+    
+    const startIndexValue = latestIndex?.index_value || 1000
+
     // Create new mock subscription or update
     let subscriptionId: string
     
@@ -51,6 +61,7 @@ export async function createMockSubscription() {
         .update({
           status: 'active',
           start_nav: startNav,
+          start_index_value: startIndexValue,
           current_bundle_id: latestBundle?.id,
           subscribed_at: new Date().toISOString(),
           next_billing_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
@@ -72,6 +83,7 @@ export async function createMockSubscription() {
           plan_amount: 4900,
           currency: 'KRW',
           start_nav: startNav,
+          start_index_value: startIndexValue,
           current_bundle_id: latestBundle?.id,
           subscribed_at: new Date().toISOString(),
           next_billing_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),

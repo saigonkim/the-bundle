@@ -153,4 +153,28 @@
   .premium-shadow {
     box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.1), 0 10px 20px -10px rgba(0, 0, 0, 0.05);
   }
+
+  /* Force mobile layout for PDF generation */
+  .force-mobile-layout {
+    width: 450px !important;
+    max-width: 450px !important;
+  }
+
+  .force-mobile-layout .grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .force-mobile-layout .flex-row {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+  }
+
+  .force-mobile-layout .md\:grid-cols-3,
+  .force-mobile-layout .md\:grid-cols-2 {
+    grid-template-columns: 1fr !important;
+  }
+
+  .force-mobile-layout .md\:flex-row {
+    flex-direction: column !important;
+  }
 }

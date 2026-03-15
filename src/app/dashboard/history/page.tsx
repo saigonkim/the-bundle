@@ -3,6 +3,7 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/com
 import { Badge } from '@/components/ui/badge'
 import { History, Calendar, ArrowRight } from 'lucide-react'
 import Link from 'next/link'
+import { formatDate } from '@/lib/utils'
 
 export default async function HistoryPage() {
   const supabase = await createClient()
@@ -35,7 +36,7 @@ export default async function HistoryPage() {
                   </Badge>
                   <div className="text-[10px] text-zinc-400 font-bold uppercase tracking-widest flex items-center gap-1.5 slice-in-from-right-2 duration-500">
                     <Calendar className="w-3 h-3" />
-                    {new Date(bundle.valid_from).toLocaleDateString()} - {bundle.valid_until ? new Date(bundle.valid_until).toLocaleDateString() : 'Present'}
+                    {formatDate(bundle.valid_from)} - {bundle.valid_until ? formatDate(bundle.valid_until) : 'Present'}
                   </div>
                 </div>
                 <CardTitle className="text-xl font-bold group-hover:text-indigo-600 transition-colors leading-tight">{bundle.title}</CardTitle>

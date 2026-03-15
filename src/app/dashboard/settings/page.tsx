@@ -1,17 +1,19 @@
 import { createClient } from '@/lib/supabase/server'
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card'
-import { Label } from '@/components/ui/label'
-import { Input } from '@/components/ui/input'
 import { Switch } from '@/components/ui/switch'
 import { Button } from '@/components/ui/button'
 import { User, Bell, Shield, Smartphone, ChevronRight, FlaskConical } from 'lucide-react'
 import { TestSimulator } from '@/components/dashboard/test-simulator'
+
+import { ProfileForm } from '@/components/dashboard/profile-form'
 
 export default async function SettingsPage() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
 
   if (!user) return null
+
+  const initialName = user.user_metadata?.full_name || user.email?.split('@')[0] || ''
 
   return (
     <div className="p-6 md:p-10 space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
@@ -33,20 +35,8 @@ export default async function SettingsPage() {
               </div>
             </div>
           </CardHeader>
-          <CardContent className="p-8 pt-4 space-y-8">
-            <div className="grid gap-6 md:grid-cols-2">
-              <div className="grid gap-2">
-                <Label htmlFor="email" className="text-xs font-bold text-zinc-400 uppercase tracking-widest pl-1">이메일 주소</Label>
-                <Input id="email" value={user.email} disabled className="h-12 rounded-xl bg-zinc-50 dark:bg-zinc-800/50 border-zinc-100 dark:border-zinc-800 font-medium" />
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="name" className="text-xs font-bold text-zinc-400 uppercase tracking-widest pl-1">이름 (닉네임)</Label>
-                <Input id="name" placeholder="닉네임을 입력하세요" className="h-12 rounded-xl border-zinc-200 dark:border-zinc-800 focus:ring-indigo-500 transition-all font-medium" />
-              </div>
-            </div>
-            <Button className="h-12 px-8 rounded-xl bg-indigo-600 text-white font-bold hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-200 dark:shadow-none">
-              변경 사항 저장
-            </Button>
+          <CardContent className="p-8 pt-4">
+            <ProfileForm initialName={initialName} email={user.email || ''} />
           </CardContent>
         </Card>
 

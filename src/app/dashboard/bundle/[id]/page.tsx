@@ -4,7 +4,8 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Package, ArrowLeft, TrendingUp, Info, PieChart } from 'lucide-react'
 import Link from 'next/link'
-import { cn } from '@/lib/utils'
+import { cn, formatDate } from '@/lib/utils'
+import { CopyBundleButton } from '@/components/dashboard/copy-bundle-button'
 
 export default async function BundleDetailPage({
   params
@@ -57,7 +58,7 @@ export default async function BundleDetailPage({
           <div className="space-y-1">
             <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">유효 기간</p>
             <p className="font-bold">
-              {new Date(bundle.valid_from).toLocaleDateString()} - {bundle.valid_until ? new Date(bundle.valid_until).toLocaleDateString() : '진행 중'}
+              {formatDate(bundle.valid_from)} - {bundle.valid_until ? formatDate(bundle.valid_until) : '진행 중'}
             </p>
           </div>
           <div className="w-px h-10 bg-zinc-200 dark:bg-zinc-800" />
@@ -79,9 +80,9 @@ export default async function BundleDetailPage({
               <PieChart className="w-5 h-5" />
               AI 투자 전략 큐레이션
             </h3>
-            <div className="space-y-6 text-indigo-50 leading-relaxed relative z-10">
-              <div className="p-6 rounded-2xl bg-white/10 backdrop-blur-sm border border-white/10">
-                <p className="text-lg font-medium italic">
+            <div className="space-y-6 text-white leading-relaxed relative z-10">
+              <div className="p-6 rounded-2xl bg-white/10 backdrop-blur-sm border border-white/20">
+                <p className="text-xl font-bold italic leading-snug">
                    " {bundle.ai_commentary} "
                 </p>
               </div>
@@ -92,9 +93,9 @@ export default async function BundleDetailPage({
                 </h4>
                 <div className="grid gap-4 sm:grid-cols-2">
                   {bundle.bundle_items?.slice(0, 2).map((item: any) => (
-                    <div key={item.id} className="p-4 rounded-xl bg-black/10 border border-white/5">
-                      <p className="text-xs text-indigo-300 mb-1 font-bold">{item.etf_name}</p>
-                      <p className="text-sm">{item.rationale}</p>
+                    <div key={item.id} className="p-5 rounded-xl bg-black/20 border border-white/10">
+                      <p className="text-sm text-indigo-200 mb-2 font-black uppercase tracking-wider">{item.etf_name}</p>
+                      <p className="text-base font-medium text-white/90">{item.rationale}</p>
                     </div>
                   ))}
                 </div>
@@ -122,11 +123,11 @@ export default async function BundleDetailPage({
                   
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-2">
-                      <Badge variant="secondary" className="text-[10px] bg-zinc-100 dark:bg-zinc-800 text-zinc-500">
+                      <Badge variant="secondary" className="text-[10px] bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 font-bold uppercase">
                         {item.metaphor}
                       </Badge>
                     </div>
-                    <p className="text-sm text-zinc-600 dark:text-zinc-400 line-clamp-2">{item.rationale}</p>
+                    <p className="text-base text-zinc-700 dark:text-zinc-300 font-medium leading-relaxed">{item.rationale}</p>
                   </div>
 
                   <div className="flex items-end flex-col min-w-[100px]">
@@ -151,24 +152,29 @@ export default async function BundleDetailPage({
             <p className="text-2xl font-black leading-tight mb-8">
               {bundle.summary}
             </p>
-            <Button className="w-full h-14 rounded-2xl bg-white text-zinc-950 font-black hover:bg-zinc-100 transition-all py-0">
-              이 번들로 포트폴리오 구성하기
-            </Button>
-            <p className="text-[10px] text-zinc-500 mt-4 text-center">
-              * 실제 증권사 계좌에서 위 비중대로 매수하시기를 제안합니다.
+            <CopyBundleButton 
+              bundleTitle={bundle.title} 
+              items={bundle.bundle_items || []} 
+            />
+            <p className="text-xs text-zinc-400 mt-4 text-center font-medium">
+              * 위 버튼을 눌러 종목 리스트를 복사한 뒤,<br />실제 증권사 계좌에서 매수하실 수 있습니다.
             </p>
           </div>
 
           <div className="p-8 rounded-[2.5rem] bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800">
             <h4 className="font-bold mb-4">투자 알림</h4>
             <div className="space-y-4">
-              <div className="p-4 rounded-2xl bg-zinc-50 dark:bg-zinc-800/50 flex gap-3">
-                <div className="w-1.5 h-1.5 rounded-full bg-indigo-500 mt-1.5 flex-shrink-0" />
-                <p className="text-xs text-zinc-500">본 번들은 {new Date(bundle.valid_from).toLocaleDateString()} 기준의 시장 데이터를 분석하여 생성되었습니다.</p>
+              <div className="p-5 rounded-2xl bg-zinc-50 dark:bg-zinc-800/50 flex gap-3 border border-zinc-100 dark:border-zinc-800">
+                <div className="w-1.5 h-1.5 rounded-full bg-indigo-500 mt-2 flex-shrink-0" />
+                <p className="text-sm text-zinc-600 dark:text-zinc-400 font-medium leading-relaxed">
+                  본 번들은 <span className="text-indigo-600 dark:text-indigo-400 font-bold">{formatDate(bundle.valid_from)}</span> 기준의 시장 데이터를 분석하여 생성되었습니다.
+                </p>
               </div>
-              <div className="p-4 rounded-2xl bg-zinc-50 dark:bg-zinc-800/50 flex gap-3">
-                <div className="w-1.5 h-1.5 rounded-full bg-indigo-500 mt-1.5 flex-shrink-0" />
-                <p className="text-xs text-zinc-500">과거 수익률이 미래 수익을 보장하지 않습니다. 신중한 투자 결정을 권장합니다.</p>
+              <div className="p-5 rounded-2xl bg-zinc-50 dark:bg-zinc-800/50 flex gap-3 border border-zinc-100 dark:border-zinc-800">
+                <div className="w-1.5 h-1.5 rounded-full bg-indigo-500 mt-2 flex-shrink-0" />
+                <p className="text-sm text-zinc-600 dark:text-zinc-400 font-medium leading-relaxed">
+                  과거 수익률이 미래 수익을 보장하지 않습니다. 신중한 투자 결정을 권장하며, 매월 초 새로운 큐레이션이 업데이트됩니다.
+                </p>
               </div>
             </div>
           </div>

@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { Loader2, Sparkles, CheckCircle2, AlertCircle, List, Send, Archive } from 'lucide-react'
+import { Loader2, Sparkles, CheckCircle2, AlertCircle, List, Send, Archive, Mail } from 'lucide-react'
 import { toast } from 'sonner'
 import { format } from 'date-fns'
 import {
@@ -23,6 +23,8 @@ export default function AdminPage() {
   const [isDetailLoading, setIsDetailLoading] = useState(false)
   const [series, setSeries] = useState<any[]>([])
   const [selectedSeriesId, setSelectedSeriesId] = useState<string>('')
+  const [isSendingNewsletter, setIsSendingNewsletter] = useState(false)
+  const [newsletterResult, setNewsletterResult] = useState<any>(null)
 
   const fetchBundles = async () => {
     setFetching(true)
@@ -99,6 +101,24 @@ export default function AdminPage() {
       }
     } catch (err: any) {
       toast.error(err.message)
+    }
+  }
+
+  const sendNewsletter = async () => {
+    setIsSendingNewsletter(true)
+    try {
+      const res = await fetch('/api/admin/newsletter', { method: 'POST' })
+      const data = await res.json()
+      if (res.ok) {
+        setNewsletterResult(data.data)
+        toast.success('뉴스레터 발송 시뮬레이션이 완료되었습니다.')
+      } else {
+        throw new Error(data.error || '발송 실패')
+      }
+    } catch (err: any) {
+      toast.error(err.message)
+    } finally {
+      setIsSendingNewsletter(false)
     }
   }
 
@@ -193,6 +213,54 @@ export default function AdminPage() {
               </div>
             </CardContent>
           </Card>
+
+          <Card className="border-zinc-200 dark:border-zinc-800 glass relative overflow-hidden">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Mail className="w-5 h-5 text-indigo-500" />
+                뉴스레터 발송
+              </CardTitle>
+              <CardDescription>
+                주간 성과 리포트를 구독자들에게 발송합니다. (테스트 계정 자동 제외)
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <Button 
+                onClick={sendNewsletter} 
+                disabled={isSendingNewsletter}
+                className="w-full h-12 rounded-2xl bg-indigo-600 text-white font-bold hover:bg-indigo-700"
+              >
+                {isSendingNewsletter ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    대상 선별 및 발송 중...
+                  </>
+                ) : (
+                  <>
+                    <Send className="mr-2 h-4 w-4" />
+                    주간 리포트 발송 시작
+                  </>
+                )}
+              </Button>
+
+              {newsletterResult && (
+                <div className="p-4 rounded-2xl bg-zinc-50 dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 space-y-2">
+                  <div className="flex justify-between text-xs">
+                    <span className="text-zinc-500">총 구독자</span>
+                    <span className="font-bold">{newsletterResult.total}명</span>
+                  </div>
+                  <div className="flex justify-between text-xs">
+                    <span className="text-zinc-500">발송 대상 (Real)</span>
+                    <span className="font-bold text-emerald-600">{newsletterResult.sent}명</span>
+                  </div>
+                  <div className="flex justify-between text-xs">
+                    <span className="text-zinc-500">제외 대상 (Test)</span>
+                    <span className="font-bold text-rose-500">{newsletterResult.skipped}명</span>
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
         </div>
 
         {/* Bundle History & Management */}
@@ -236,8 +304,8 @@ export default function AdminPage() {
                 </CardHeader>
                 <CardContent className="flex items-center justify-between pt-2">
                   <div className="text-xs text-zinc-500">
-                    생성: {format(new Date(bundle.created_at), 'yyyy-MM-dd HH:mm')}
-                    {bundle.published_at && ` | 발행: ${format(new Date(bundle.published_at), 'yyyy-MM-dd HH:mm')}`}
+                    생성: {format(new Date(bundle.created_at), 'yyyy/MM/dd HH:mm')}
+                    {bundle.published_at && ` | 발행: ${format(new Date(bundle.published_at), 'yyyy/MM/dd HH:mm')}`}
                   </div>
                   <div className="flex gap-2">
                     <Button 

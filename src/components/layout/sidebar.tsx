@@ -14,6 +14,7 @@ const sidebarItems = [
 ]
 
 import { UserProfileDropdown } from './user-profile-dropdown'
+import { NotificationBell } from './notification-bell'
 
 export function Sidebar({ className, user }: { className?: string, user?: any }) {
   const pathname = usePathname()
@@ -27,7 +28,10 @@ export function Sidebar({ className, user }: { className?: string, user?: any })
         <Link href="/dashboard" className="text-lg font-bold tracking-tight text-zinc-900 dark:text-zinc-50">
           The Bundle
         </Link>
-        {user && <UserProfileDropdown user={user} />}
+        <div className="flex items-center gap-1">
+          <NotificationBell />
+          {user && <UserProfileDropdown user={user} />}
+        </div>
       </div>
       <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
         {sidebarItems.map((item) => {

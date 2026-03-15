@@ -1,9 +1,12 @@
 import { createClient } from '@/lib/supabase/server'
 import { RoiChart } from '@/components/dashboard/roi-chart'
 import { Badge } from '@/components/ui/badge'
-import { TrendingUp, Award, Zap, ArrowUpRight } from 'lucide-react'
-import { cn } from '@/lib/utils'
+import { Button } from '@/components/ui/button'
+import { Progress } from '@/components/ui/progress'
+import { TrendingUp, Award, Zap, ArrowUpRight, Info, FileText, CheckCircle2 } from 'lucide-react'
+import { cn, formatDate } from '@/lib/utils'
 import { getPatienceInfo } from '@/lib/patience/calculator'
+import { DownloadReportButton } from '@/components/dashboard/download-report-button'
 
 export default async function PerformancePage() {
   const supabase = await createClient()
@@ -118,13 +121,99 @@ export default async function PerformancePage() {
       <div className="space-y-6">
         <div className="flex items-center justify-between px-2">
           <h3 className="text-xl font-bold">누적 수익률 추이</h3>
-          <div className="flex gap-2">
-            <Badge variant="outline" className="rounded-lg h-7 border-zinc-200 dark:border-zinc-800">1주</Badge>
-            <Badge variant="outline" className="rounded-lg h-7 bg-zinc-900 text-white dark:bg-white dark:text-zinc-900 border-none">1개월</Badge>
-            <Badge variant="outline" className="rounded-lg h-7 border-zinc-200 dark:border-zinc-800">전체</Badge>
-          </div>
         </div>
         <RoiChart data={chartData} />
+      </div>
+
+      <div className="rounded-[2.5rem] bg-indigo-50/50 dark:bg-indigo-900/10 border border-indigo-100/50 dark:border-indigo-900/20 p-8 space-y-4">
+        <h3 className="text-lg font-black text-indigo-900 dark:text-indigo-400 flex items-center gap-2">
+          <Info className="w-5 h-5" />
+          The Bundle 지수 가이드
+        </h3>
+        <div className="grid gap-6 md:grid-cols-2">
+          <div className="space-y-2">
+            <h4 className="font-bold text-zinc-900 dark:text-zinc-100">📈 누적 ROI (Bundle Index)</h4>
+            <p className="text-sm text-zinc-600 dark:text-zinc-400 leading-relaxed">
+              매달 번들이 업데이트(리밸런싱)되어도 수익률이 끊기지 않도록 체이닝된 통합 지수입니다. 
+              가입일 대비 자산의 순수 성장률을 의미합니다.
+            </p>
+          </div>
+          <div className="space-y-2">
+            <h4 className="font-bold text-zinc-900 dark:text-zinc-100">💎 기다림 지수 (Patience Score)</h4>
+            <p className="text-sm text-zinc-600 dark:text-zinc-400 leading-relaxed">
+              수익률과 별개로, 시장의 흔들림에도 번들을 유지하며 길게 투자한 시간을 점수화한 당신의 투자 근력입니다.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div id="performance-insight-report" className="rounded-[2.5rem] border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 p-8 shadow-sm space-y-8">
+        <h3 className="text-xl font-bold flex items-center gap-2">
+          <FileText className="w-5 h-5 text-indigo-500" />
+          주간 성과 인사이트
+          <Badge className="bg-emerald-500 text-white border-none ml-2">NEW</Badge>
+        </h3>
+        
+        <div className="grid gap-6 md:grid-cols-3">
+          <div className="space-y-4 p-6 rounded-3xl bg-zinc-50 dark:bg-zinc-900/50 border border-zinc-100 dark:border-zinc-800">
+            <div className="flex items-center gap-2 text-zinc-400 font-bold text-[10px] uppercase tracking-wider">
+              <TrendingUp className="w-3 h-3" />
+              Performance Snapshot
+            </div>
+            <div className="space-y-2">
+              <div className="flex justify-between text-sm">
+                <span className="text-zinc-500">Benchmark (S&P 500)</span>
+                <span className="font-bold">+1.2%</span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-zinc-500">My Bundle</span>
+                <span className="font-bold text-emerald-500">+2.4%</span>
+              </div>
+              <Progress value={75} className="h-1.5 mt-2" />
+            </div>
+          </div>
+
+          <div className="space-y-4 p-6 rounded-3xl bg-zinc-50 dark:bg-zinc-900/50 border border-zinc-100 dark:border-zinc-800">
+            <div className="flex items-center gap-2 text-zinc-400 font-bold text-[10px] uppercase tracking-wider">
+              <Zap className="w-3 h-3" />
+              Bundle Health
+            </div>
+            <div className="flex items-center gap-4">
+              <div className="h-12 w-12 rounded-full border-4 border-emerald-500/20 border-t-emerald-500 flex items-center justify-center text-xs font-black">
+                92%
+              </div>
+              <div>
+                <p className="text-sm font-bold">안정적인 분산</p>
+                <p className="text-[10px] text-zinc-500">기술주 비중 65% 유지중</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="space-y-4 p-6 rounded-3xl bg-zinc-50 dark:bg-zinc-900/50 border border-zinc-100 dark:border-zinc-800">
+            <div className="flex items-center gap-2 text-zinc-400 font-bold text-[10px] uppercase tracking-wider">
+              <CheckCircle2 className="w-3 h-3" />
+              Weekly Action
+            </div>
+            <div className="p-3 bg-indigo-50 dark:bg-indigo-900/20 rounded-2xl">
+              <p className="text-xs font-bold text-indigo-700 dark:text-indigo-400">"현 상태 유지 (HODL)"</p>
+              <p className="text-[10px] text-indigo-600/70 dark:text-indigo-400/70 mt-1">4월 리밸런싱까지 추가 대응이 필요 없습니다.</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="p-6 rounded-3xl bg-indigo-600 text-white relative overflow-hidden group">
+          <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div>
+              <h4 className="font-bold text-lg mb-1">AI 요약 인사이트 🤖</h4>
+              <p className="text-sm opacity-90 leading-relaxed max-w-2xl">
+                금리 인하 동결에 따라 나스닥의 변동성이 컸지만, 반도체 올인 번들이 보유한 제조 ETF들이 방어력을 보여주었습니다. 
+                현재 지수는 가입 시점 대비 순항 중이며 리밸런싱 주기인 월초까지 보유를 권장합니다.
+              </p>
+            </div>
+            <DownloadReportButton />
+          </div>
+          <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -translate-y-32 translate-x-32 blur-3xl" />
+        </div>
       </div>
 
       <div className="rounded-[2.5rem] border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 p-8 shadow-sm">
@@ -140,7 +229,7 @@ export default async function PerformancePage() {
                   <TrendingUp className={cn("w-6 h-6", Number(log.virtual_return_pct) >= 0 ? "text-emerald-500" : "text-rose-500")} />
                 </div>
                 <div>
-                  <p className="font-bold text-lg">{new Date(log.recorded_date).toLocaleDateString()}</p>
+                  <p className="font-bold text-lg">{formatDate(log.recorded_date)}</p>
                   <p className="text-xs text-zinc-500 font-medium">{log.reason || '일간 자본 성장 기록'}</p>
                 </div>
               </div>

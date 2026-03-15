@@ -5,6 +5,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Wallet, CreditCard, Calendar, CheckCircle2, AlertCircle } from 'lucide-react'
 import { SubscriptionSubmitButton } from '@/components/dashboard/subscription-button'
 import { createMockSubscription } from '../subscription-action'
+import { formatDate } from '@/lib/utils'
 
 export default async function SubscriptionPage() {
   const supabase = await createClient()
@@ -57,7 +58,7 @@ export default async function SubscriptionPage() {
                   <span className="text-sm font-medium">다음 결제 예정일</span>
                 </div>
                 <span className="font-bold">
-                  {new Date(subscription.next_billing_at).toLocaleDateString('ko-KR')}
+                  {formatDate(subscription.next_billing_at)}
                 </span>
               </div>
             )}
@@ -123,7 +124,7 @@ export default async function SubscriptionPage() {
               </thead>
               <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800">
                 <tr>
-                  <td className="px-6 py-4 font-medium">{new Date(subscription.subscribed_at).toLocaleDateString('ko-KR')}</td>
+                  <td className="px-6 py-4 font-medium">{formatDate(subscription.subscribed_at)}</td>
                   <td className="px-6 py-4">The Bundle Premium 전용 (1개월)</td>
                   <td className="px-6 py-4">4,900원</td>
                   <td className="px-6 py-4 text-right">
